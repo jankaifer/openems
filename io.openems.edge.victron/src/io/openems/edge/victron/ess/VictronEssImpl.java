@@ -45,6 +45,8 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
+import io.openems.edge.bridge.modbus.api.task.Task;
+import io.openems.edge.bridge.modbus.api.task.WriteTask;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -964,7 +966,15 @@ public class VictronEssImpl extends AbstractOpenemsModbusComponent
 								this.m(VictronEss.ChannelId.ESS_DISABLE_CHARGE_FLAG, new SignedWordElement(38)),
 								this.m(VictronEss.ChannelId.ESS_DISABLE_FEEDBACK_FLAG, new SignedWordElement(39)))
 
-		);
+		) {
+			@Override
+			public synchronized void addTask(Task task) {
+				if (VictronEssImpl.this.config.readOnlyMode() && task instanceof WriteTask) {
+					return;
+				}
+				super.addTask(task);
+			}
+		};
 	}
 
 	@Override
