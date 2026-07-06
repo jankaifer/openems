@@ -257,7 +257,6 @@ public class VictronBatteryInverterImpl extends AbstractOpenemsModbusComponent i
 		}
 
 		this.batteryInverterMaxChargePower = Math.round(maxChargeVoltage * systemMaxChargeCurrent);
-		this.batteryInverterMaxDischargePower = this.batteryInverterMaxChargePower;
 
 		var maxApparentPower = this.getMaxApparentPower().get();
 		if (maxApparentPower == null || maxApparentPower == 0) {
@@ -265,6 +264,14 @@ public class VictronBatteryInverterImpl extends AbstractOpenemsModbusComponent i
 			return false;
 		}
 		this._setMaxApparentPower(maxApparentPower);
+
+		// Discharge is bounded by the inverter's rated AC power, NOT the SoC-tapering
+		// charge product (maxChargeVoltage * systemMaxChargeCurrent). The previous
+		// line reused the charge value for discharge, which throttled discharge as
+		// the charge current tapered near full SoC. The battery-BMS discharge
+		// envelope still applies separately via batteryMaxDischargePower
+		// (getBatteryLimits), and the config ceiling caps it in calculateHardwareLimits.
+		this.batteryInverterMaxDischargePower = maxApparentPower;
 
 		return true;
 	}
