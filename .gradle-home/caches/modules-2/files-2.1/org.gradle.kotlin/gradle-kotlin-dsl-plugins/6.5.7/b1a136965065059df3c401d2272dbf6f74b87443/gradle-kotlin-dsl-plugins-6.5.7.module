@@ -1,0 +1,192 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "org.gradle.kotlin",
+    "module": "gradle-kotlin-dsl-plugins",
+    "version": "6.5.7",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.0-rc-3"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "gradlebuild.externally-available": false,
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.gradlebuild.nullaway": "DISABLED",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "strictly": "2.3.20",
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.slf4j",
+              "module": "slf4j-simple"
+            }
+          ]
+        }
+      ],
+      "files": [
+        {
+          "name": "gradle-kotlin-dsl-plugins-6.5.7.jar",
+          "url": "gradle-kotlin-dsl-plugins-6.5.7.jar",
+          "size": 48575,
+          "sha512": "32f6a6dbeed538856b5a1a7a8c4601cff2849207ae3ef689dc8e06888a72fcc2daf70ed024466f9b1e74fdbf41e9490f5edf4c218ee55aef274135fbdbf3bb60",
+          "sha256": "cc8caa4101a35d0cf0433a63e8ad38911a4c848073fcc94f43ae0251f33e4daf",
+          "sha1": "ced742cebce11545dd407b23b28283e75482d8d5",
+          "md5": "03d0a4e9a6d62cf1ff3c4e2f2bb2779e"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "gradlebuild.externally-available": false,
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.gradlebuild.nullaway": "DISABLED",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-gradle-plugin",
+          "version": {
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.slf4j",
+              "module": "slf4j-simple"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-gradle-plugin-api",
+          "version": {
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.slf4j",
+              "module": "slf4j-simple"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-sam-with-receiver",
+          "version": {
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.slf4j",
+              "module": "slf4j-simple"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-assignment",
+          "version": {
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.slf4j",
+              "module": "slf4j-simple"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "strictly": "2.3.20",
+            "requires": "2.3.20"
+          },
+          "excludes": [
+            {
+              "group": "org.slf4j",
+              "module": "slf4j-simple"
+            }
+          ]
+        }
+      ],
+      "files": [
+        {
+          "name": "gradle-kotlin-dsl-plugins-6.5.7.jar",
+          "url": "gradle-kotlin-dsl-plugins-6.5.7.jar",
+          "size": 48575,
+          "sha512": "32f6a6dbeed538856b5a1a7a8c4601cff2849207ae3ef689dc8e06888a72fcc2daf70ed024466f9b1e74fdbf41e9490f5edf4c218ee55aef274135fbdbf3bb60",
+          "sha256": "cc8caa4101a35d0cf0433a63e8ad38911a4c848073fcc94f43ae0251f33e4daf",
+          "sha1": "ced742cebce11545dd407b23b28283e75482d8d5",
+          "md5": "03d0a4e9a6d62cf1ff3c4e2f2bb2779e"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "gradle-kotlin-dsl-plugins-6.5.7-sources.jar",
+          "url": "gradle-kotlin-dsl-plugins-6.5.7-sources.jar",
+          "size": 10654,
+          "sha512": "e94091e3b654a8771dc5e7f5a88d7ae148eb2e2db9daabd1d54a75e06c4e6bd5a7ebcdc640585d6ef2a49af63934c1762ffdc9ad0a218f6c2b8643ed25eb50a7",
+          "sha256": "a50472dbdb1b3b57ab2bc971172c0b49de592de70e36047dae55188915e31d37",
+          "sha1": "8e0c60c5e8b67f4d69593a31701b1b7ec5ba384e",
+          "md5": "19101dffdc831650f9c6b7450fe18810"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "gradle-kotlin-dsl-plugins-6.5.7-javadoc.jar",
+          "url": "gradle-kotlin-dsl-plugins-6.5.7-javadoc.jar",
+          "size": 297,
+          "sha512": "fb85ac4c3f9137764aff3c30b65b38237a03133dc666081589f37ad0150842ac9139ca7aaa29562ef73061f226d0645e2441ad56f78fffb1f429b53b22ffccab",
+          "sha256": "9289f26aac1bca6f88b51ced436e204df4a084c4a0d356f5ac69940bf9b64863",
+          "sha1": "06e1c165e7d708e1bb42beeebc2c7963368374a3",
+          "md5": "8bdc976773e022d567409571b887063c"
+        }
+      ]
+    }
+  ]
+}

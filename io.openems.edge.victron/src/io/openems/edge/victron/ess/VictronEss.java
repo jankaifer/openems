@@ -27,6 +27,7 @@ import io.openems.edge.bridge.modbus.api.ModbusComponent;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerReadChannel;
+import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.LongReadChannel;
 import io.openems.edge.common.channel.ShortWriteChannel;
 import io.openems.edge.common.channel.WriteChannel;
@@ -353,6 +354,7 @@ public interface VictronEss extends OpenemsComponent, EventHandler, ModbusCompon
 
 		// ================= Overvoltage Feed-in Settings =================
 		FEED_DC_OVERVOLTAGE_TO_GRID(Doc.of(INTEGER)//
+				.accessMode(READ_WRITE)//
 				.text("0=Feed-in; 1=Do not feed-in")), //
 		MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L1(Doc.of(INTEGER)//
 				.unit(WATT)//
@@ -1170,6 +1172,77 @@ public interface VictronEss extends OpenemsComponent, EventHandler, ModbusCompon
 	 * @param battery the {@link VictronBattery}
 	 */
 	public void unsetBattery(VictronBattery battery);
+
+	/**
+	 * Sets the DC overvoltage feed-in flag (register 65).
+	 *
+	 * <p>
+	 * 0 = feed DC-coupled PV overvoltage surplus into the grid; 1 = do not feed in.
+	 *
+	 * @param value the register value (0 or 1)
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setFeedDcOvervoltageToGrid(int value) throws OpenemsNamedException {
+		((IntegerWriteChannel) this.channel(ChannelId.FEED_DC_OVERVOLTAGE_TO_GRID)).setNextWriteValue(value);
+	}
+
+	/**
+	 * Sets the maximum overvoltage feed-in power on L1 (register 66) in [W].
+	 *
+	 * @param value the power value in [W]
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setMaxDcOvervoltagePowerToGridL1(int value) throws OpenemsNamedException {
+		((IntegerWriteChannel) this.channel(ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L1)).setNextWriteValue(value);
+	}
+
+	/**
+	 * Sets the maximum overvoltage feed-in power on L2 (register 67) in [W].
+	 *
+	 * @param value the power value in [W]
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setMaxDcOvervoltagePowerToGridL2(int value) throws OpenemsNamedException {
+		((IntegerWriteChannel) this.channel(ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L2)).setNextWriteValue(value);
+	}
+
+	/**
+	 * Sets the maximum overvoltage feed-in power on L3 (register 68) in [W].
+	 *
+	 * @param value the power value in [W]
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setMaxDcOvervoltagePowerToGridL3(int value) throws OpenemsNamedException {
+		((IntegerWriteChannel) this.channel(ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L3)).setNextWriteValue(value);
+	}
+
+	/**
+	 * Sets whether the AC power setpoint acts as the overvoltage feed-in limit
+	 * (register 71).
+	 *
+	 * <p>
+	 * 0 = setpoint interpreted normally (feed-in NOT limited by it); 1 = setpoint is
+	 * the overvoltage feed-in limit.
+	 *
+	 * @param value the register value (0 or 1)
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setAcPowerSetpointAsFeedInLimit(int value) throws OpenemsNamedException {
+		((IntegerWriteChannel) this.channel(ChannelId.AC_POWER_SETPOINT_AS_FEED_IN_LIMIT)).setNextWriteValue(value);
+	}
+
+	/**
+	 * Sets the solar overvoltage feed-in offset (register 72).
+	 *
+	 * <p>
+	 * 0 = 1 V offset; 1 = 0.1 V offset (recommended for ESS mode 3).
+	 *
+	 * @param value the register value (0 or 1)
+	 * @throws OpenemsNamedException on error
+	 */
+	public default void setSolarOffsetVoltage(int value) throws OpenemsNamedException {
+		((IntegerWriteChannel) this.channel(ChannelId.SOLAR_OFFSET_VOLTAGE)).setNextWriteValue(value);
+	}
 
 	/**
 	 * Gets the phase the ESS is connected to.

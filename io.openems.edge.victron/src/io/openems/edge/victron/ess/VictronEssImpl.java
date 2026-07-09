@@ -180,6 +180,11 @@ public class VictronEssImpl extends AbstractOpenemsModbusComponent
 	private Integer maxChargePower = null;
 	private Integer maxDischargePower = null;
 
+	// Per-phase "unlimited" feed-in power [W] for registers 66-68: the max uint16 raw
+	// value (65535) at scalefactor 0.01, i.e. 65535 * 100 W. Written when the
+	// configured maxFeedInPowerW is negative (no limit).
+	private static final int MAX_FEED_IN_POWER_UNLIMITED_W = 65535 * 100;
+
 	private final CalculateEnergyFromPower calculateDischargeEnergy = new CalculateEnergyFromPower(this,
 			SymmetricEss.ChannelId.ACTIVE_DISCHARGE_ENERGY);
 
@@ -732,7 +737,51 @@ public class VictronEssImpl extends AbstractOpenemsModbusComponent
 		case TOPIC_CYCLE_BEFORE_CONTROLLERS -> {
 			this._setMyActivePower();
 			this.calculateEnergy();
+			this.applyOvervoltageFeedInSettings();
 		}
+		}
+	}
+
+	/**
+	 * Asserts the DC-coupled PV overvoltage feed-in registers (65-68, 71, 72) from
+	 * the configuration.
+	 *
+	 * <p>
+	 * Overvoltage feed-in exports surplus PV to the grid via the MPPT (raising the
+	 * DC-bus voltage) independently of the battery AC power setpoint - so it lets a
+	 * DC-coupled system sell all its solar overflow up to the inverter/grid limit
+	 * while a separate, lower battery discharge limit still protects the battery.
+	 * The values are re-asserted every cycle (like the setpoint) because they are
+	 * volatile VE.Bus control registers, not persisted GX settings. Read-only mode
+	 * drops the write tasks in {@link #defineModbusProtocol()}, so nothing is
+	 * written in shadow mode.
+	 */
+	private void applyOvervoltageFeedInSettings() {
+		if (!this.config.manageOvervoltageFeedIn()) {
+			return;
+		}
+		try {
+			// Register 65: 0 = feed DC overvoltage into the grid; 1 = do not.
+			this.setFeedDcOvervoltageToGrid(this.config.feedDcOvervoltageToGrid() ? 0 : 1);
+
+			// Registers 66-68: per-phase feed-in ceiling [W]. The configured total is
+			// split evenly across the connected phases; -1 means unlimited.
+			final int total = this.config.maxFeedInPowerW();
+			final int phases = this.singlePhase == null ? 3 : 1;
+			final int perPhase = total < 0 ? MAX_FEED_IN_POWER_UNLIMITED_W : Math.round((float) total / phases);
+			this.setMaxDcOvervoltagePowerToGridL1(perPhase);
+			this.setMaxDcOvervoltagePowerToGridL2(perPhase);
+			this.setMaxDcOvervoltagePowerToGridL3(perPhase);
+
+			// Register 71: keep 0 so the battery AC setpoint never caps the PV feed-in
+			// (that is what decouples the discharge limit from the export limit).
+			this.setAcPowerSetpointAsFeedInLimit(0);
+
+			// Register 72: 1 = use the finer 0.1 V overvoltage offset (recommended for
+			// mode 3 external control).
+			this.setSolarOffsetVoltage(this.config.fixSolarOffsetTo100mV() ? 1 : 0);
+		} catch (OpenemsNamedException e) {
+			this.logError(this.log, "Unable to apply overvoltage feed-in settings: " + e.getMessage());
 		}
 	}
 
@@ -797,7 +846,7 @@ public class VictronEssImpl extends AbstractOpenemsModbusComponent
 
 	@Override
 	protected ModbusProtocol defineModbusProtocol() { // Unit-ID 227
-		return new ModbusProtocol(this, //
+		final var protocol = new ModbusProtocol(this, //
 				new FC3ReadRegistersTask(3, Priority.HIGH, //
 
 						// Voltage AC In
@@ -910,9 +959,15 @@ public class VictronEssImpl extends AbstractOpenemsModbusComponent
 						this.m(VictronEss.ChannelId.GRID_LOST_ALARM, new UnsignedWordElement(64)),
 
 						this.m(VictronEss.ChannelId.FEED_DC_OVERVOLTAGE_TO_GRID, new UnsignedWordElement(65)),
-						this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L1, new UnsignedWordElement(66)),
-						this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L2, new UnsignedWordElement(67)),
-						this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L3, new UnsignedWordElement(68)),
+						// MaxFeedInPower registers use Victron scalefactor 0.01 (raw*100 = W), so
+						// SCALE_FACTOR_2 maps raw<->Watts. Without it the channel would read/write
+						// the raw register value (1/100 W) instead of Watts.
+						this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L1, new UnsignedWordElement(66),
+								SCALE_FACTOR_2),
+						this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L2, new UnsignedWordElement(67),
+								SCALE_FACTOR_2),
+						this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L3, new UnsignedWordElement(68),
+								SCALE_FACTOR_2),
 
 						this.m(VictronEss.ChannelId.AC_INPUT1_IGNORED, new UnsignedWordElement(69)),
 						this.m(VictronEss.ChannelId.AC_INPUT2_IGNORED, new UnsignedWordElement(70)),
@@ -975,6 +1030,26 @@ public class VictronEssImpl extends AbstractOpenemsModbusComponent
 				super.addTask(task);
 			}
 		};
+
+		// DC-coupled PV overvoltage feed-in control (registers 65-68, 71, 72). These
+		// export surplus PV to the grid independently of the battery AC setpoint, so
+		// they are only written when explicitly enabled. The addTask override above
+		// still drops these WriteTasks in read-only (shadow) mode.
+		if (this.config.manageOvervoltageFeedIn()) {
+			protocol.addTask(new FC16WriteRegistersTask(65, //
+					this.m(VictronEss.ChannelId.FEED_DC_OVERVOLTAGE_TO_GRID, new UnsignedWordElement(65)),
+					this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L1, new UnsignedWordElement(66),
+							SCALE_FACTOR_2),
+					this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L2, new UnsignedWordElement(67),
+							SCALE_FACTOR_2),
+					this.m(VictronEss.ChannelId.MAX_DC_OVERVOLTAGE_POWER_TO_GRID_L3, new UnsignedWordElement(68),
+							SCALE_FACTOR_2)));
+			protocol.addTask(new FC16WriteRegistersTask(71, //
+					this.m(VictronEss.ChannelId.AC_POWER_SETPOINT_AS_FEED_IN_LIMIT, new UnsignedWordElement(71)),
+					this.m(VictronEss.ChannelId.SOLAR_OFFSET_VOLTAGE, new UnsignedWordElement(72))));
+		}
+
+		return protocol;
 	}
 
 	@Override
